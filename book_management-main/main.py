@@ -1,17 +1,17 @@
 from fastapi import FastAPI
-from routers import authors, books, api_key
+from routers import brands, sneakers, api_key
 from database import create_database
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Book Management System",
-    description="An API for managing books, authors, and genres.",
+    title="Nike Sneakers Management System",
+    description="An API for managing Nike sneakers, brands, and categories.",
     version="1.0.0",
 )
 
 # Include the routers
-app.include_router(authors.router, prefix="/api/authors", tags=["Authors"])
-app.include_router(books.router, prefix="/api/books", tags=["Books"])
+app.include_router(brands.router, prefix="/api/brands", tags=["Brands"])
+app.include_router(sneakers.router, prefix="/api/sneakers", tags=["Sneakers"])
 app.include_router(api_key.router, prefix="/api/validate_key")
 
 
