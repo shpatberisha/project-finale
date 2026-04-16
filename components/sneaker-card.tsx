@@ -2,8 +2,10 @@
 
 import { MoreHorizontal, Edit, Trash2, ExternalLink } from "lucide-react"
 import { useState } from "react"
+import { useSWRConfig } from "swr"
+import { deleteSneaker } from "@/lib/api"
 
-interface Sneaker {
+interface SneakerDisplay {
   id: number
   name: string
   brand: string
@@ -14,8 +16,31 @@ interface Sneaker {
   image: string
 }
 
-export function SneakerCard({ sneaker }: { sneaker: Sneaker }) {
+interface SneakerCardProps {
+  sneaker: SneakerDisplay
+  onEdit?: (id: number) => void
+}
+
+export function SneakerCard({ sneaker, onEdit }: SneakerCardProps) {
   const [showMenu, setShowMenu] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const { mutate } = useSWRConfig()
+
+  const handleDelete = async () => {
+    const apiKey = prompt("Enter API key to delete:")
+    if (!apiKey) return
+
+    setIsDeleting(true)
+    try {
+      await deleteSneaker(sneaker.id, apiKey)
+      mutate("/api/sneakers/")
+    } catch {
+      alert("Failed to delete sneaker. Check your API key.")
+    } finally {
+      setIsDeleting(false)
+      setShowMenu(false)
+    }
+  }
 
   return (
     <div className="group relative rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-muted-foreground/50">
@@ -36,7 +61,10 @@ export function SneakerCard({ sneaker }: { sneaker: Sneaker }) {
             </button>
             {showMenu && (
               <div className="absolute right-0 top-full mt-1 w-36 rounded-md border border-border bg-popover shadow-lg z-10">
-                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary transition-colors">
+                <button 
+                  onClick={() => onEdit?.(sneaker.id)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary transition-colors"
+                >
                   <Edit className="h-4 w-4" />
                   Edit
                 </button>
@@ -44,9 +72,13 @@ export function SneakerCard({ sneaker }: { sneaker: Sneaker }) {
                   <ExternalLink className="h-4 w-4" />
                   View Details
                 </button>
-                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary transition-colors">
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary transition-colors disabled:opacity-50"
+                >
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
             )}
