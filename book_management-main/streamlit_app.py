@@ -129,7 +129,7 @@ def login_page():
                             st.session_state.user = result
                             st.session_state.api_key = result.get("api_key")
                             st.success("Login successful!")
-                            st.rerun()
+                            st.experimental_rerun()
                         else:
                             st.error(result.get("error", "Invalid credentials"))
                     else:
@@ -263,7 +263,7 @@ def brands_dashboard(api_key):
                     success, error = add_brand(api_key, brand_name)
                     if success:
                         st.success(f"Brand '{brand_name}' added!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error(error.get("detail", "Failed to add brand") if error else "Failed to add brand")
                 else:
@@ -288,7 +288,7 @@ def brands_dashboard(api_key):
                 if st.button("Update Brand", key="update_brand_btn"):
                     if update_brand(api_key, selected_brand['id'], new_name):
                         st.success("Brand updated!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("Failed to update brand")
         
@@ -305,7 +305,7 @@ def brands_dashboard(api_key):
                 if st.button("Delete Brand", key="delete_brand_btn", type="primary"):
                     if delete_brand(api_key, brand_to_delete['id']):
                         st.success("Brand deleted!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("Failed to delete brand")
 
@@ -373,7 +373,7 @@ def sneakers_dashboard(api_key):
                     success, error = add_sneaker(api_key, sneaker_data)
                     if success:
                         st.success(f"Sneaker '{name}' added!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error(error.get("detail", "Failed to add sneaker") if error else "Failed to add sneaker")
                 else:
@@ -421,7 +421,7 @@ def sneakers_dashboard(api_key):
                         }
                         if update_sneaker(api_key, selected_sneaker['id'], sneaker_data):
                             st.success("Sneaker updated!")
-                            st.rerun()
+                            st.experimental_rerun()
                         else:
                             st.error("Failed to update sneaker")
         
@@ -438,7 +438,7 @@ def sneakers_dashboard(api_key):
                 if st.button("Delete Sneaker", key="delete_sneaker_btn", type="primary"):
                     if delete_sneaker(api_key, sneaker_to_delete['id']):
                         st.success("Sneaker deleted!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("Failed to delete sneaker")
 
@@ -534,7 +534,7 @@ def profile_page(api_key, user):
             if result.get("success"):
                 st.session_state.api_key = result.get("api_key")
                 st.success("API key regenerated!")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("Failed to regenerate API key")
     
@@ -571,7 +571,7 @@ def main():
                 st.session_state.authenticated = False
                 st.session_state.user = None
                 st.session_state.api_key = None
-                st.rerun()
+                st.experimental_rerun()
         
         # Main content
         api_key = st.session_state.api_key
