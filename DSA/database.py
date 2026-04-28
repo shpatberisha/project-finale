@@ -1,6 +1,5 @@
 import sqlite3
 import os
-from contextlib import contextmanager
 
 DB_NAME = "sneakers.db"
 
@@ -38,9 +37,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-@contextmanager
 def get_db():
-    """Get database connection"""
+    """Get database connection (FastAPI dependency)"""
     conn = sqlite3.connect(get_db_path())
     conn.row_factory = sqlite3.Row
     try:
