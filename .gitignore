@@ -1,0 +1,6 @@
+DSA/.env
+DSA/sneakers.db
+__pycache__/
+*.pyc
+.pythonlibs/
+.cache/
