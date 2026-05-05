@@ -12,13 +12,113 @@ BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000/api')
 
 st.set_page_config(page_title="Nike Sneakers Management", page_icon="👟", layout="wide")
 
-api_key_input = st.text_input("Enter API Key", type="password")
+# Initialize session state for authentication
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'user' not in st.session_state:
+    st.session_state.user = None
+if 'token' not in st.session_state:
+    st.session_state.token = None
 
 
-def validate_api_key(api_key):
-    headers = {"api-key": api_key}
-    response = requests.get(f"{BASE_URL}/validate_key/", headers=headers)
-    return response.status_code == 200
+# Authentication functions
+def register_user(username, email, password):
+    """Register a new user"""
+    try:
+        response = requests.post(
+            f"{BASE_URL}/auth/register",
+            json={"username": username, "email": email, "password": password}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            st.session_state.logged_in = True
+            st.session_state.user = data['user']
+            st.session_state.token = data['access_token']
+            return True, "Registration successful!"
+        else:
+            return False, response.json().get('detail', 'Registration failed')
+    except Exception as e:
+        return False, f"Connection error: {str(e)}"
+
+
+def login_user(username, password):
+    """Login user"""
+    try:
+        response = requests.post(
+            f"{BASE_URL}/auth/login",
+            json={"username": username, "password": password}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            st.session_state.logged_in = True
+            st.session_state.user = data['user']
+            st.session_state.token = data['access_token']
+            return True, "Login successful!"
+        else:
+            return False, response.json().get('detail', 'Login failed')
+    except Exception as e:
+        return False, f"Connection error: {str(e)}"
+
+
+def logout_user():
+    """Logout user"""
+    if st.session_state.token:
+        try:
+            requests.post(f"{BASE_URL}/auth/logout", params={"token": st.session_state.token})
+        except:
+            pass
+    st.session_state.logged_in = False
+    st.session_state.user = None
+    st.session_state.token = None
+
+
+# Login/Register Page
+def auth_page():
+    st.title("🏀 Nike Sneakers Management")
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        tab1, tab2 = st.tabs(["Login", "Register"])
+        
+        with tab1:
+            st.subheader("Login to your account")
+            login_username = st.text_input("Username", key="login_username")
+            login_password = st.text_input("Password", type="password", key="login_password")
+            
+            if st.button("Login", use_container_width=True):
+                if login_username and login_password:
+                    success, message = login_user(login_username, login_password)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+                else:
+                    st.error("Please enter username and password")
+        
+        with tab2:
+            st.subheader("Create a new account")
+            reg_username = st.text_input("Username", key="reg_username")
+            reg_email = st.text_input("Email", key="reg_email")
+            reg_password = st.text_input("Password", type="password", key="reg_password")
+            reg_confirm_password = st.text_input("Confirm Password", type="password", key="reg_confirm_password")
+            
+            if st.button("Register", use_container_width=True):
+                if not reg_username or not reg_email or not reg_password:
+                    st.error("Please fill in all fields")
+                elif reg_password != reg_confirm_password:
+                    st.error("Passwords do not match")
+                elif len(reg_password) < 6:
+                    st.error("Password must be at least 6 characters")
+                else:
+                    success, message = register_user(reg_username, reg_email, reg_password)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
 
 
 # Helper functions for API communication
@@ -96,7 +196,7 @@ def delete_sneaker(api_key, sneaker_id):
 
 # Dashboard for managing Brands
 def brands_dashboard(api_key):
-    st.title("🏷️ Brands Management")
+    st.title("Brands Management")
 
     # Display existing brands
     st.subheader("Existing Brands")
@@ -144,7 +244,7 @@ def brands_dashboard(api_key):
 
 # Dashboard for managing Sneakers
 def sneakers_dashboard(api_key):
-    st.title("👟 Sneakers Management")
+    st.title("Sneakers Management")
 
     # Display existing sneakers
     st.subheader("Existing Sneakers")
@@ -240,7 +340,7 @@ def sneakers_dashboard(api_key):
 
 # Visualizations Dashboard
 def visualizations_dashboard():
-    st.title("📊 Visualizations Dashboard")
+    st.title("Visualizations Dashboard")
 
     # Fetch the sneakers and brands data
     sneakers = get_sneakers()
@@ -350,19 +450,87 @@ def visualizations_dashboard():
         st.warning("No sneaker data available for visualizations.")
 
 
-# Main app logic
-st.sidebar.title("🏀 Nike Sneakers")
-st.sidebar.markdown("---")
-st.sidebar.title("Navigation")
-option = st.sidebar.selectbox("Choose a dashboard", ["Sneakers Dashboard", "Brands Dashboard", "Visualizations"])
+# User Profile Page
+def profile_page():
+    st.title("My Profile")
+    
+    if st.session_state.user:
+        user = st.session_state.user
+        
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            st.markdown("### User Information")
+            st.write(f"**Username:** {user['username']}")
+            st.write(f"**Email:** {user['email']}")
+            st.write(f"**Status:** {'Active' if user['is_active'] else 'Inactive'}")
+        
+        with col2:
+            st.markdown("### Quick Stats")
+            sneakers = get_sneakers()
+            brands = get_brands()
+            
+            stat_col1, stat_col2 = st.columns(2)
+            with stat_col1:
+                st.metric("Total Sneakers", len(sneakers))
+            with stat_col2:
+                st.metric("Total Brands", len(brands))
 
-if option == "Visualizations":
-    visualizations_dashboard()
-elif api_key_input and validate_api_key(api_key_input):
-    if option == "Brands Dashboard":
-        brands_dashboard(api_key_input)
+
+# Main app logic
+def main_app():
+    # Sidebar with user info
+    st.sidebar.title("Nike Sneakers")
+    st.sidebar.markdown("---")
+    
+    if st.session_state.user:
+        st.sidebar.write(f"Welcome, **{st.session_state.user['username']}**!")
+        if st.sidebar.button("Logout"):
+            logout_user()
+            st.rerun()
+    
+    st.sidebar.markdown("---")
+    st.sidebar.title("Navigation")
+    option = st.sidebar.selectbox("Choose a dashboard", ["Sneakers Dashboard", "Brands Dashboard", "Visualizations", "My Profile"])
+    
+    # API Key input for protected operations
+    st.sidebar.markdown("---")
+    api_key_input = st.sidebar.text_input("API Key (for write operations)", type="password")
+
+    if option == "Visualizations":
+        visualizations_dashboard()
+    elif option == "My Profile":
+        profile_page()
+    elif option == "Brands Dashboard":
+        if api_key_input:
+            brands_dashboard(api_key_input)
+        else:
+            st.warning("Please enter an API key in the sidebar to manage brands.")
+            brands = get_brands()
+            if brands:
+                st.subheader("Existing Brands (Read-only)")
+                df_brands = pd.DataFrame(brands)
+                st.dataframe(df_brands, use_container_width=True)
     elif option == "Sneakers Dashboard":
-        sneakers_dashboard(api_key_input)
+        if api_key_input:
+            sneakers_dashboard(api_key_input)
+        else:
+            st.warning("Please enter an API key in the sidebar to manage sneakers.")
+            sneakers = get_sneakers()
+            if sneakers:
+                st.subheader("Existing Sneakers (Read-only)")
+                brands = get_brands()
+                brand_id_to_name = {brand['id']: brand['name'] for brand in brands}
+                for sneaker in sneakers:
+                    sneaker['brand'] = brand_id_to_name.get(sneaker['brand_id'], 'Unknown')
+                    sneaker['categories'] = ', '.join(sneaker.get('categories', []))
+                    del sneaker['brand_id']
+                df_sneakers = pd.DataFrame(sneakers)
+                st.dataframe(df_sneakers, use_container_width=True)
+
+
+# Main entry point
+if st.session_state.logged_in:
+    main_app()
 else:
-    if option != "Visualizations":
-        st.error("Invalid API Key or API Key is missing.")
+    auth_page()
