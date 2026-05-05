@@ -1,15 +1,56 @@
-# Nike Sneakers Management API
+# Nike Sneakers Management System
 
-A FastAPI-based REST API for managing Nike sneakers and brands.
+A full-stack application for managing Nike sneakers with FastAPI backend and Streamlit frontend.
 
 ## Features
 
+- **User Authentication**: Register and login with secure password hashing
 - **Sneakers Management**: Create, read, update, and delete sneaker records
 - **Brands Management**: Manage sneaker brands (Nike, Jordan, etc.)
+- **Dashboard**: Visualizations and statistics for your sneaker collection
 - **API Key Authentication**: Secure write operations with API key validation
 - **SQLite Database**: Lightweight persistent storage
 
+## Requirements
+
+- Python 3.8+
+- pip
+
+## How to Run
+
+### Step 1: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 2: Start the FastAPI Backend
+
+Open a terminal and run:
+
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+### Step 3: Start the Streamlit Frontend
+
+Open a second terminal and run:
+
+```bash
+streamlit run app.py
+```
+
+The frontend will open in your browser at `http://localhost:8501`
+
 ## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login and get access token
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user info
 
 ### Sneakers
 - `GET /api/sneakers/` - List all sneakers
@@ -37,13 +78,28 @@ A FastAPI-based REST API for managing Nike sneakers and brands.
 }
 ```
 
-## Installation
+## Project Structure
 
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
+```
+.
+├── main.py              # FastAPI application entry point
+├── app.py               # Streamlit frontend
+├── database.py          # SQLite database setup and queries
+├── requirements.txt     # Python dependencies
+├── models/
+│   ├── sneaker.py       # Sneaker Pydantic model
+│   ├── brand.py         # Brand Pydantic model
+│   └── user.py          # User Pydantic model
+├── routers/
+│   ├── sneakers.py      # Sneakers API endpoints
+│   ├── brands.py        # Brands API endpoints
+│   ├── auth.py          # Authentication endpoints
+│   └── api_key.py       # API key validation
+└── auth/
+    ├── security.py      # Security utilities
+    └── generate_key.py  # API key generation
 ```
 
-## Documentation
+## API Documentation
 
-Once running, visit `/docs` for interactive Swagger documentation.
+Once the backend is running, visit `http://localhost:8000/docs` for interactive Swagger documentation.
