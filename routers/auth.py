@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, status
 from models.user import UserCreate, UserLogin, UserResponse, Token
 from database import get_db_connection
@@ -40,9 +41,6 @@ def validate_token(token: str) -> Optional[int]:
         else:
             del active_tokens[token]
     return None
-
-
-from typing import Optional
 
 
 @router.post("/register", response_model=Token)
