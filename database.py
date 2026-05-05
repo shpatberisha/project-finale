@@ -1,4 +1,5 @@
 import sqlite3
+import hashlib
 
 
 # Function to establish a connection to the SQLite database
@@ -6,6 +7,11 @@ def get_db_connection():
     conn = sqlite3.connect('sneakers.db')
     conn.row_factory = sqlite3.Row  # This allows the rows returned to behave like dictionaries
     return conn
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using SHA256"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def create_database():
@@ -41,10 +47,21 @@ def create_database():
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            is_admin BOOLEAN DEFAULT 0,
             is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Create default admin user if not exists
+    cursor.execute('SELECT id FROM users WHERE username = ?', ('admin',))
+    if cursor.fetchone() is None:
+        admin_password = hash_password('admin123')
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, is_admin, is_active)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ('admin', 'admin@nike.com', admin_password, 1, 1))
+        print("Admin user created: username='admin', password='admin123'")
     
     conn.commit()
     return conn, cursor

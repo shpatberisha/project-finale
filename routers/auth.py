@@ -79,7 +79,7 @@ def register(user: UserCreate):
     
     # Get the created user
     user_id = cursor.lastrowid
-    cursor.execute("SELECT id, username, email, is_active FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT id, username, email, is_admin, is_active FROM users WHERE id = ?", (user_id,))
     row = cursor.fetchone()
     conn.close()
     
@@ -93,6 +93,7 @@ def register(user: UserCreate):
             id=row["id"],
             username=row["username"],
             email=row["email"],
+            is_admin=row["is_admin"],
             is_active=row["is_active"]
         )
     )
@@ -106,7 +107,7 @@ def login(user: UserLogin):
     
     # Find user by username
     cursor.execute(
-        "SELECT id, username, email, password_hash, is_active FROM users WHERE username = ?",
+        "SELECT id, username, email, password_hash, is_admin, is_active FROM users WHERE username = ?",
         (user.username,)
     )
     row = cursor.fetchone()
@@ -142,6 +143,7 @@ def login(user: UserLogin):
             id=row["id"],
             username=row["username"],
             email=row["email"],
+            is_admin=row["is_admin"],
             is_active=row["is_active"]
         )
     )
@@ -168,7 +170,7 @@ def get_current_user(token: str):
     
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, is_active FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT id, username, email, is_admin, is_active FROM users WHERE id = ?", (user_id,))
     row = cursor.fetchone()
     conn.close()
     
@@ -182,5 +184,6 @@ def get_current_user(token: str):
         id=row["id"],
         username=row["username"],
         email=row["email"],
+        is_admin=row["is_admin"],
         is_active=row["is_active"]
     )
